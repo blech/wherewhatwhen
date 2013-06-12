@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>husk.org. where? what? when?</title>
+    <link rel="stylesheet" type="text/css" href="www.css">
+    <script src="http://maps.google.com/maps/api/js?sensor=false" type="text/javascript"></script>
+    <script src="http://husk.org/js/ui/jquery.dimensions.js" type="text/javascript" charset="utf-8"></script>
+    <script src="http://husk.org/js/ui/ui.core.js" type="text/javascript" charset="utf-8"></script>
+    <script src="http://husk.org/js/ui/ui.slider.js" type="text/javascript" charset="utf-8"></script>
+  </head>
+
+  <body>
+    <div id="map"></div>
+
+    <div id="input">
+      <form id="form" action="#" method="get">
+
+        <table cellpadding="0" cellspacing="0" id="www">
+        
+          <tr><th>where?</th><th>what?</th><th>when?</th></tr>
+
+          <tr><td><select id="place_type_id" name="place_type_id">
+                <option value="22">neighbourhood</option>
+                <option value="7" selected="selected">locality</option>
+                <option value="8">region</option>
+                <!-- option value="9">county</option -->
+                <option value="12">country</option>
+                <option value="29">continent</option></select><br></td>
+
+              <td>Show <select id="type" name="type">
+                    <option value="me">my photos</option>
+                    <option value="ff">photos from friends</option>
+                    <option value="contacts" selected="selected">photos from contacts</option>
+                    <option value="tag">photos tagged</option></select><br>
+
+              </td>
+              <td>
+                <div id='container'><span class="slider_container"><span class='slider_bar'>
+                            <span id='slider1_handle' class='slider_handle'></span>
+                            <span id='slider2_handle' class='slider_handle'></span>
+                            </span></span></div>
+
+              </td><td>
+
+                <input type="submit" value="Update locations"><br>
+                <input type="checkbox" name="reset" id="reset" value="yes"><label for="reset">Don't reset map when updating.</label>
+              </td>
+          </tr>
+        </table>
+      </form>
+    </div>
+
+    <!-- 
+              <select id="time_type_code" name="time_type_code">
+              <option value="0" selected="selected">at any time</option>
+              <option value="86400">in the last day</option>
+              <option value="604800">in the last week</option>
+              <option value="2678400">in the last month</option>
+              <option value="16070400">in the last six months</option>
+              <option value="32140800">in the last year</option>
+              <option value="96422400">in the last three years</option></select>.
+
+    -->
+
+    <div id="photos"><div id="photos_content"></div></div>
+    <div id="info">
+
+        <h1>where? what? when? <br><span class='subhead'>maps and photos, oh my!</span></h1>
+
+        <div id="blurb"><p>This is a small web app that uses new Flickr API methods to show
+                        where in the world photos posted to Flickr have been taken. It will show photos with a particular tag,
+                        or, if you authenticate, photos from your friends, contacts, or yourself. The size
+                        of the circle on any given place indicates how many photos were taken there.</p>
+
+                        <p>You can click on a circle to see photos taken in that area, or zoom in if there
+                        are lots of overlapping areas. The controls at the bottom change where, what and when
+                        is in the photos.</p></div>
+
+    <p>print(link(flickr.auth_url("read", true), "Authorize with Flickr"));
+     to see your photos, and those of your friends and family, grouped on the map.</p>
+
+    <p style="text-align:right"><a href="#" onclick="$('div#info').fadeOut(); return false;">Hide this overlay</a></div>
+
+    <script type="text/javascript">var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www."); document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E")); </script> <script type="text/javascript"> try { var pageTracker = _gat._getTracker("UA-5271055-6"); pageTracker._trackPageview(); } catch(err) {}</script>
+
+
+  </body>
+</html>
