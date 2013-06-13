@@ -1,31 +1,53 @@
     $(document).ready(load);
-    // $(window).unload(GUnload);
 
-    var map;
-    var markers = [];
-    var current_tag;
-    var show_photos;
-    var place;
+    var api_key = '46810731c766915b2c56c61c39587f45'
 
     var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
                   "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
-    function switch_to_tags() {
-        showing = "tags";
-        show_photos();
+    function load() {
+
+        $('div.lr').width(Math.floor($(window).width()/80)*80);
+        $('div#photos_content').width(Math.floor($(window).width()/80)*80);
+
+        get_places();
     }
 
-    function switch_to_recent() {
-        showing = "recent";
-        show_photos();
+    function get_places() {
+
+        var type = $('form select#type option:selected').attr('value');
+        var place_type_id = $('form select#place_type_id option:selected').attr('value');
+
+        type = 'tag'
+
+        if (type == "contacts") {
+          $.getJSON("/json/?method=flickr.places.placesForContacts", { place_type_id: place_type_id, max_taken_date: max, min_taken_date: min }, plot);
+        } else if (type == "ff") {
+          $.getJSON("/json/?method=flickr.places.placesForContacts", { place_type_id: place_type_id, max_taken_date: max, min_taken_date: min, contacts: "ff" }, plot);
+        } else if (type == "tag") {
+          $.ajax({
+            // url: "http://api.flickr.com/services/rest/", { method: 'flickr.places.placesForTags', place_type_id: place_type_id, tags: 'snow', tags_real: $("input#tag").attr("value"), api_key:api_key, format:'json', }, 
+            url: "http://api.flickr.com/services/rest/?method=flickr.places.placesForTags&api_key=a6fc58b6f800c1c604bb8a46a6a2f2e1&place_type_id=7&tags=snow&format=json",
+            dataType: 'jsonp',
+            success: function(data) { console.log(data); console.log("calling plot?"); plot(data); },
+            });
+        } else {
+          $.getJSON("/json/?method=flickr.places.placesForUser", { place_type_id: place_type_id, max_taken_date: max, min_taken_date: min }, plot);
+        }
+
+        console.log("Past getJSON call");
     }
 
-    function switch_to_interesting() {
-        showing = "interesting";
-        show_photos();
+
+    jsonFlickrApi = function(data) {
+        console.log("in jsonFlickrAPI");
+        console.log(data);
+        plot(data);
     }
 
     function plot(data) {
+        console.log("plotting data");
+
         var so = 90; var we = 180; var no = -90; var ea = -180;
         var max = 0;
 
@@ -50,95 +72,12 @@
           lat = parseFloat(place.latitude);
           lon = parseFloat(place.longitude);
 
-          var ll = new google.maps.LatLng(lat, lon);
-
-          var size = Math.ceil(Math.log(parseInt(place.photo_count))/Math.log(max)*40)
-
-          show_photos = function() {
-            if (this.value) { place = this.value; }
-            var html = "<div class='lr'><span class='l'><a href='http://flickr.com/places"+place.place_url+"'>"+place._content+"</a>";
-            html += " - "+place.photo_count+" photos for this "+place.place_type+"</span>";
-            html += "<span class='r'><img src='http://husk.org/images/spinner.gif' id='spinner' width='9' height='9' border='0' style='margin:0px;' alt='Please wait...'>";
-            if (showing == "tags") {
-              html += " <a href='#' onclick='javascript:switch_to_recent(); return false;'>Show recent photos</a> | <a href='#' onclick='javascript:switch_to_interesting(); return false;'>Show interesting photos</a> | <b>Showing tags</b> | ";
-            } else if (showing == "recent") {
-              html += " <b>Showing recent photos</b> | <a href='#' onclick='javascript:switch_to_interesting(); return false;'>Show interesting photos</a> | <a href='#' onclick='javascript:switch_to_tags(); return false;'>Show tags</a> | ";
-            } else if (showing == "interesting") {
-              html += " <a href='#' onclick='javascript:switch_to_recent(); return false;'>Show recent photos</a> | <b>Showing interesting photos</b> | <a href='#' onclick='javascript:switch_to_tags(); return false;'>Show tags</a> | ";
-            }
-            html += " <a href='#' onclick='javascript:$('div#photos').fadeOut(); return false;'>Hide</a></span></div><br style='clear:both;'>";
-
-            // get appropriate photos (or tags)
-            var type = $('form select#type option:selected').attr('value');
-            var place_type_id = $('form select#place_type_id option:selected').attr('value');
-
-            var min = to_mysql_datestamp(new Date($(".slider_bar").slider("value", 0)*1000));
-            var max = to_mysql_datestamp(new Date($(".slider_bar").slider("value", 1)*1000));
-
-            if (showing == "tags") {
-                $.getJSON("/json/?method=flickr.places.tagsForPlace", { place_id : place.place_id, max_taken_date: max, min_taken_date: min }, add_tags);
-            } else {
-                // photos
-                if (showing == "recent") {
-                    sort = "date-taken-desc";
-                } else {
-                    sort = "interestingness-desc";
-                }
-
-                if (type == "contacts") {
-                    $.getJSON("/json/?method=flickr.photos.search", { place_id : place.place_id, extras: 'owner_name', max_taken_date: max, min_taken_date: min, sort: sort, per_page: 20,   user_id: "me", contacts: "all" }, add_photos);
-                } else if (type == "ff") {
-                    $.getJSON("/json/?method=flickr.photos.search", { place_id : place.place_id, extras: 'owner_name', max_taken_date: max, min_taken_date: min, sort: sort, per_page: 20,   user_id: "me", contacts: "ff" }, add_photos);
-                } else if (type == "tag") {
-                    $.getJSON("/json/?method=flickr.photos.search", { place_id : place.place_id, extras: 'owner_name', max_taken_date: max, min_taken_date: min, sort: sort, per_page: 20,   tags: $("input#tag").attr("value") }, add_photos);
-                } else {
-                    $.getJSON("/json/?method=flickr.photos.search", { place_id : place.place_id, extras: 'owner_name', max_taken_date: max, min_taken_date: min, sort: sort, per_page: 20,   user_id: "me" }, add_photos);
-                }
-            }
-
-            $('div#photos_content').html(html);
-            $('div#photos').fadeIn("slow");
-            console.log(place);
-            console.log($('div#photos').width());
-
-          }
-
-          var marker = new google.maps.Marker( { position: ll,
-                                                 map: map,
-                                                 icon: get_circle(size) }
-                                             );
-    //      marker.title = place;
-          google.maps.event.addListener(marker, "click", show_photos);
-
-    //       google.maps.event.addListener(marker, "dblclick", function() {
-    //         map.setCenter(this.getLatLng());
-    //         map.zoomIn();
-    //
-    //         // too dumb to get this to work
-    //         // this.zoomhandler = google.maps.event.addListener(marker, "moveend", function() {
-    //         //   map.removeListener(this.zoomhandler);
-    //         // });
-    //       });
-          // marker.bindInfoWindowHtml(html);
-
-          markers.push(marker);
-          console.log("added marker (?)");
-
-          marker = undefined;
-
-          if (lat < so) { so = lat; }
-          if (lat > no) { no = lat; }
-          if (lon < we) { we = lon; }
-          if (lon > ea) { ea = lon; }
+          console.log(lat, lon, place._content, place.photo_count);
+          var marker = L.marker(new L.LatLng(lat, lon), 
+                   {icon: L.mapbox.marker.icon({'marker-color': 'CC0033'}),});
+          marker.addTo(map);
         }
 
-        // TODO don't do this if the map's been moved
-    //     if (!$('input#reset').attr('checked')) {
-    //         var latLngBounds = new google.maps.LatLngBounds(new google.maps.LatLng(so, we), new google.maps.LatLng(no, ea));
-    //         var center = latLngBounds.getCenter();
-    //         var zoom = map.fitBounds(latLngBounds);
-    //         map.setCenter(center, zoom);
-    //     }
     }
 
     function add_photos(data) {
@@ -194,43 +133,6 @@
     }
 
     function load() {
-        /* initialise slider */
-        $(document).ready(
-          function() {
-            max = Math.floor(new Date().getTime()/1000);
-            min = max-(60*60*24*365.25*5)
-            $('.slider_bar').slider( {
-              handle: '.slider_handle',
-
-              range: true,
-              min: min,
-              max: max,
-              slide: function(e, ui) {
-                  var min_epoch = new Date($(".slider_bar").slider("value", 0)*1000);
-                  var min = months[min_epoch.getMonth()]+" "+min_epoch.getFullYear();
-
-                  var max_epoch = new Date($(".slider_bar").slider("value", 1)*1000);
-                  var max = months[max_epoch.getMonth()]+" "+max_epoch.getFullYear();
-
-                  if (min == max) {
-                      $('#dateinfo').text("in "+min);
-                  } else {
-                      $('#dateinfo').text("from "+min+" to "+max+".");
-                  }
-              },
-
-              change: function(e,ui) {
-    //             clear_markers();
-    //             $("div#photos").fadeOut();
-    //             get_places();
-              }
-            });
-
-            $(".slider_bar").slider("moveTo", min, 0);
-            $(".slider_bar").slider("moveTo", max, 1);
-          }
-        );
-
         /* layout page */
         // if (!GBrowserIsCompatible()) { alert("Your browser is not compatible."); return; }
 
@@ -241,42 +143,6 @@
         $('div#map').height(height);
         $('div.lr').width(Math.floor($(window).width()/80)*80);
         $('div#photos_content').width(Math.floor($(window).width()/80)*80);
-
-        /* initialise map */
-        var textual = [{
-            featureType: "all",
-            elementType: "geometry",
-            stylers: [{
-                visibility: "off"
-            }]
-        }];
-
-        var mapOptions = {
-            zoom: 2,
-            center: new google.maps.LatLng(0, 0),
-            mapTypeControl: false,
-            mapTypeId: google.maps.MapTypeId.ROADMAP,
-            navigationControlOptions: {style: google.maps.NavigationControlStyle.SMALL}
-        };
-
-        map = new google.maps.Map(document.getElementById("map"), mapOptions);
-
-    //     var styledMapOptions = {
-    //         map: map,
-    //         name: "Literal"
-    //     }
-    //
-    //     var MapType = new google.maps.StyledMapType(textual, styledMapOptions);
-    //
-    //     map.mapTypes.set('literal', MapType);
-    //     map.setMapTypeId('literal');
-
-
-        // map.addControl(new google.maps.LargeMapControl());
-        // map.addControl(new google.maps.MapTypeControl());
-        // map.addMapType(G_PHYSICAL_MAP);
-        // map.setMapType(G_PHYSICAL_MAP);
-        // map.setCenter(new google.maps.LatLng(0, 0), 2);
 
         $('form select#type').change(function() {
             if ($('form select#type option:selected').attr('value') == "tag") {
@@ -328,6 +194,10 @@
         var type = $('form select#type option:selected').attr('value');
         var place_type_id = $('form select#place_type_id option:selected').attr('value');
 
+        type = 'tag'
+
+        console.log(type, place_type_id)
+
         // sort out dates (if necessary)
         // var time_type = $('form select#time_type_code option:selected').attr('value');
 
@@ -338,18 +208,23 @@
           ds = to_mysql_datestamp(d);
         } */
 
-        var min_epoch = $(".slider_bar").slider("value", 0)*1000;
-        var min = to_mysql_datestamp(new Date(min_epoch));
-
-        var max_epoch = $(".slider_bar").slider("value", 1)*1000;
-        var max = to_mysql_datestamp(new Date(max_epoch));
+        // var min_epoch = $(".slider_bar").slider("value", 0)*1000;
+        // var min = to_mysql_datestamp(new Date(min_epoch));
+        // 
+        // var max_epoch = $(".slider_bar").slider("value", 1)*1000;
+        // var max = to_mysql_datestamp(new Date(max_epoch));
 
         if (type == "contacts") {
           $.getJSON("/json/?method=flickr.places.placesForContacts", { place_type_id: place_type_id, max_taken_date: max, min_taken_date: min }, plot);
         } else if (type == "ff") {
           $.getJSON("/json/?method=flickr.places.placesForContacts", { place_type_id: place_type_id, max_taken_date: max, min_taken_date: min, contacts: "ff" }, plot);
         } else if (type == "tag") {
-          $.getJSON("/json/?method=flickr.places.placesForTags", { place_type_id: place_type_id, max_taken_date: max, min_taken_date: min, tags: $("input#tag").attr("value") }, plot);
+          $.ajax({
+            // url: "http://api.flickr.com/services/rest/", { method: 'flickr.places.placesForTags', place_type_id: place_type_id, tags: 'snow', tags_real: $("input#tag").attr("value"), api_key:api_key, format:'json', }, 
+            url: "http://api.flickr.com/services/rest/?method=flickr.places.placesForTags&api_key=a6fc58b6f800c1c604bb8a46a6a2f2e1&place_type_id=7&tags=snow&format=json",
+            dataType: 'jsonp',
+            success: function(data) { console.log(data); console.log("calling plot?"); plot(data); },
+            });
         } else {
           $.getJSON("/json/?method=flickr.places.placesForUser", { place_type_id: place_type_id, max_taken_date: max, min_taken_date: min }, plot);
         }

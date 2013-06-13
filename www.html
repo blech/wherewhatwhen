@@ -3,7 +3,7 @@
   <head>
     <title>husk.org. where? what? when?</title>
 
-    <link rel="stylesheet" href="my.css" type="text/css" />
+    <link rel="stylesheet" href="www.css" type="text/css" />
 
     <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no' />
     <script src='http://api.tiles.mapbox.com/mapbox.js/v1.0.2/mapbox.js'></script>
@@ -11,13 +11,13 @@
     <!--[if lte IE 8]>
       <link href='http://api.tiles.mapbox.com/mapbox.js/v1.0.2/mapbox.ie.css' rel='stylesheet' >
     <![endif]-->
-    <style>
-      body { margin:0; padding:0; }
-      #map { position:absolute; top:0; bottom:0; width:100%; }
-    </style>
+
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.2/jquery.min.js"></script>
+    <script src='www.js'></script>
+
   </head>
   <body>
-    <div id='map'></div>
+    <div id="map"></div>
       <script>
         var map = L.mapbox.map('map');
         map.addLayer(L.tileLayer('http://{s}.sm.mapstack.stamen.com/(toner-background,$fff[difference],$fff[@85])/{z}/{x}/{y}.png'));
@@ -47,10 +47,7 @@
 
               </td>
               <td>
-                <div id='container'><span class="slider_container"><span class='slider_bar'>
-                            <span id='slider1_handle' class='slider_handle'></span>
-                            <span id='slider2_handle' class='slider_handle'></span>
-                            </span></span></div>
+                    <input type="range">
 
               </td><td>
 
